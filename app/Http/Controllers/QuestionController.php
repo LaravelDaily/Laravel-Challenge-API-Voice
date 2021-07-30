@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Request\StoreVoiceRequest;
+use App\Http\Request\VotingRequest;
 use App\Models\Question;
 use App\Models\Voice;
 use Illuminate\Http\Request;
 
 class QuestionController extends Controller
 {
-    public function voice(StoreVoiceRequest $request, Question $question)
+    public function voice(VotingRequest $request, Question $question)
     {
         $this->authorize('vote', $question);
 
