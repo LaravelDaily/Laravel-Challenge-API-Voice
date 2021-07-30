@@ -17,11 +17,6 @@ class VoiceController extends Controller
             $question_id = $request->post('question_id');
             $value = $request->post('value');
     
-            // Validate in Form Request.
-            // if (!$question) {
-            //     $this->jsonResponse(404, 'not found question ..');
-            // }
-    
             $question = Question::select('user_id')->where('id', $question_id)->first();
             if ($question->user_id == $authId) {
                 return $this->jsonResponse(500, 'The user is not allowed to vote to your question');
@@ -57,12 +52,9 @@ class VoiceController extends Controller
     }
 
     private function jsonResponse($status, $message) {
-        $status = intval($status);
-        $message = strval($message);
-
         return response()->json([
-            'status' => $status,
-            'message' => $message
+            'status' => intval($status),
+            'message' => strval($message)
         ], 200);
     }
 }
