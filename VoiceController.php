@@ -5,10 +5,10 @@ class TestController extends Controller
     {
         $request->validate([
             'question_id' => 'required|int|exists:questions,id',
-            'value' => 'required|value'
+            'value' => 'required|boolean'
         ]);
 
-        $question = Question::findOrFail($request->post('question_id'));
+        $question = Question::findOrFail($request->question_id);
 
         abort_if(
             $question->user_id == auth()->id(),
