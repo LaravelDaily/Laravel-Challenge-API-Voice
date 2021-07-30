@@ -19,10 +19,7 @@
 
         if ($voice) {
             if ($voice->value == $request->post('value')) {
-                return response()->json([
-                    'status' => 500,
-                    'message' => 'You are not allowed to vote more than once'
-                ]);
+                return response()->json($this->responseJsonDefined(500, 'You are not allowed to vote more than once'));
             }
 
             $voice->value = $request->post('value');
