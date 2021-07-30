@@ -97,5 +97,5 @@ public function voice(Request $request) {
 
 public function question()
     {
-        return $this->hasOne(Question::class);
+        return $this->belongsTo(Question::class);
     }
