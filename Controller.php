@@ -15,12 +15,10 @@ class Controller
      */
     protected function sendJsonResponse(array $data, int $code): Response
     {
-        $response = [
+        return response()->json([
             "code" => $code,
             "data" => $data
-        ];
-
-        return response()->json($response, $code);
+        ], $code);
     }
 
     /**
