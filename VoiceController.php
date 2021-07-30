@@ -23,6 +23,8 @@ public function submitVote_NeedsKeepJsonResponse(Request $request) // If, for so
     $voice = Voice::firstOrCreate([ // Maybe change model's name? Unless it's actually voice for some reason?
       'user_id' => auth()->id(),
       'question_id' => $request->post('question_id')
+    ],[
+      'value' => $request->post('value') // Forgot this. This tells that, if it needs to create, it will create with a value on this field 
     ]);
 
     if ($voice->wasRecentlyCreated) { // If it was created by CREATE parte of firstOrCREATE
