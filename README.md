@@ -1,26 +1,33 @@
 # Laravel Challenge: API Controller - Voices
 
-This is a Controller code that needs to be improved, in whatever way possible.
+Only minimal files have been added.
 
-Author's question: "how to make clean code to this code"
-Source: [Youtube comment](https://www.youtube.com/watch?v=kc8Ks3ElGmM&lc=Ugw_mwNX5Als7nfFvat4AaABAg)
+## Relevant Files
 
-This repository is not a full Laravel project, just that one Controller file.
-Your task is to improve the code, by submitting a Pull Request.
+ - `app/Http/Controllers/QuestionController.php`: Simple Controller with 1 method.
+ - `app/Http/Requests/VotingRequest.php`: Form Request with the minimal requirements.
+ - `app/Models/User.php`: Add a relationship to Vote model.
+ - `app/Models/Voice.php`: Make sure relevant fields are fillable.
+ - `app/Providers/AuthServiceProvider.php`: Define a simple Gate to check if an user is authorized or not to vote on a question.
+ - `routes/web.php`: Add a route with Route Model Binding.
 
----
+## The code itself
 
-## Rules: How to perform the task
+After offloading the validation to a form request, the authorization to a gate and consolidating the logic with an upsert operation, the end result only 3 statements were needed.
 
-I will be expecting a Pull Request to the `main` branch, containing **all** fixes with completely working project.
+```php
+    public function voice(VotingRequest $request, Question $question)
+    {
+        $this->authorize('vote', $question);
 
-If you don't know how to contribute a PR, here's [my video with instructions](https://www.youtube.com/watch?v=vEcT6JIFji0).
+        auth()->user()->voices()->updateOrCreate(
+            ['question_id' => $question->id],
+            ['value' => $request->value]
+        );
 
-**Important**: I will NOT merge the Pull Request, only comment on it, whether it's correct or not.
-
-With my limited time, I will probably personally review first 10 Pull Requests, all the others will still get "karma points" by doing a good job to help the author.
-
-If you have any questions, or suggestions for the future challenges, please open an Issue.
-
-Good luck!
-
+        return response()->json([
+            'status' => 200,
+            'message' => 'Voting completed successfully.'
+        ]);
+    }
+```
