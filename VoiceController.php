@@ -4,11 +4,7 @@ public function voice(StoreQuestionRequest $request){
     $question=Question::find($request->post('question_id'));
     if (!$question->user_id==auth()->id()){
         if($question->voice()->user_id == auth()->id()){
-            $voice=Voice::where([
-            ['user_id','=',auth()->id()],
-            ['question_id','=',$request->post('question_id')]
-             ])->first();
-             $voice->value =$request->post('value');
+             $question->voice()->value = $request->post('value');
              if($voice->isDirty()){
                 $voice->save();
              }
