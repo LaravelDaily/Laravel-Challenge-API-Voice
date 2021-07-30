@@ -1,48 +1,65 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
+<?php
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
-
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+class User extends Model
+{
+    public function voices()
+    {
+        return $this->hasMany(Voice::class);
     }
 
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
+    public function votedFor($question_id)
+    {
+        return $this->voices->whereQuestoinId($question_id)->first();
+    }
+}
 
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
+class Question extends Model
+{
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function isMine()
+    {
+        return $this->creator->id === Auth::id();
+    }
+
+    public function voices()
+    {
+        return $this->hasMany(Voice::class);
+    }
+
+    public function addVote($user_id, $value)
+    {
+        $this->voices->create(compact('user_id', 'value'));
+    }
+}
+
+class VoiceController extends controller
+{
+
+    public function voice(Request $request, Question $question)
+    {
+        $request->validate([
+            'value' => 'required|boolean'
+        ]);
+
+        if ($question->isMine()) {
+            return response()->json('you can\'t vote for yourself', 401);
+        }
+
+        if ($myVote = $request->user()->votedFor($question->id)) {
+            if ($myVote->value === $request->value) {
+                return response()->json('The user is not allowed to vote more than once', 401);
+            } else {
+                $myVote->update([
+                    'value' => $request->value
+                ]);
+                return response()->json('update your voice', 201);
+            }
+        }
+
+        return $question->addVote($request->user(), $request->value);
+    }
 }
