@@ -44,7 +44,7 @@ class NewVoiceFromUser
             ]);
 
             return response()->json([
-                'status' => 201,
+                'status' => 200,
                 'message' => 'update your voice'
             ]);
         }
@@ -56,7 +56,7 @@ class NewVoiceFromUser
         ]);
 
         return response()->json([
-            'status' => 200,
+            'status' => 201,
             'message' => 'Voting completed successfully'
         ], 201);
 
