@@ -48,8 +48,6 @@ function voice(Request $request)
 
 function voice2(Request $request)
 {
-    // this version more complex to debuging I think 
-
     $request->validate([
         'question_id'=>'required|int|exists:questions,id',
         'value'=>'required|boolean',
@@ -71,6 +69,7 @@ function voice2(Request $request)
     if ($voice && $voice->value == $request->value) {
         $status = 406;
         $message = 'The user is not allowed to vote more than once';
+        
     } elseif ($voice) {
         $voice->update([
             'value'=>$request->post('value')
@@ -85,7 +84,6 @@ function voice2(Request $request)
         $status = 201; // Created
         $message = 'Voting completed successfully';
     }
-    
     return response()->json([
         'status' => $status,
         'message' => $message

@@ -85,7 +85,6 @@ function voice2(Request $request)
         $status = 201; // Created
         $message = 'Voting completed successfully';
     }
-    
     return response()->json([
         'status' => $status,
         'message' => $message

@@ -71,6 +71,7 @@ function voice2(Request $request)
     if ($voice && $voice->value == $request->value) {
         $status = 406;
         $message = 'The user is not allowed to vote more than once';
+        
     } elseif ($voice) {
         $voice->update([
             'value'=>$request->post('value')
@@ -85,7 +86,6 @@ function voice2(Request $request)
         $status = 201; // Created
         $message = 'Voting completed successfully';
     }
-    
     return response()->json([
         'status' => $status,
         'message' => $message
