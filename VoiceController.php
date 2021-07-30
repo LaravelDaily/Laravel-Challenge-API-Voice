@@ -1,48 +1,39 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
-
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
+<?php 
+    public function voice(Request $request){
+        $request->validate([
+            'question_id' => 'required|int|exists:questions,id',
+            'value' => 'required|boolean',
         ]);
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
+        $question = Question::findOrFail($request->post('question_id'));
+        
+        if ($question->user_id == auth()->id()){
+            return response()->json($this->responseJsonDefined(500, 'You are not allowed to vote to your question'));
+        }
+            
+        //check if user voted 
+        $voice = Voice::where([
+                    ['user_id', auth()->id()],
+                    ['question_id' ,$request->post('question_id')]
+                ])->first();
+
+        if ($voice) {
+            if ($voice->value == $request->post('value')) {
+                return response()->json($this->responseJsonDefined(500, 'You are not allowed to vote more than once'));
+            }
+
+            $voice->value = $request->post('value');
+            $voice->save();
+            return response()->json($this->responseJsonDefined(201, 'Update your voice'));
+        }
+
+        $question->voice()->create([
+            'user_id' => auth()->id(),
+            'value' => $request->post('value')
         ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+        return response()->json($this->responseJsonDefined(200, 'Voting completed successfully'));
     }
 
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
-
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
-}
+    private function responseJsonDefined($status, $message){
+        return ['status' => $status, 'message' => $message];
+    }
