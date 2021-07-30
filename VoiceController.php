@@ -19,9 +19,8 @@ class TestController extends Controller
         }
 
         // using gate to prevent update with rules
-        $response = Gate::inspect('update', $question);
-        if (!$response->allowed()) {
-            return $this->sendErrorResponse("The user is not allowed to vote to your question", 403);
+        if (!Gate::inspect('update', $question)->allowed()) {
+            return $this->sendErrorResponse("You cant vote to your own question", 403);
         }
 
         // check if user voted 
@@ -29,14 +28,14 @@ class TestController extends Controller
 
         if (!$voice) {
             if ($voice->value === $request->post('value')) {
-                return $this->sendErrorResponse("The user is not allowed to vote more than once", 500);
+                return $this->sendErrorResponse("You cant vote more than once", 500);
             }
 
             $voice->update([
                 'value' => $request->post('value')
             ]);
 
-            return $this->sendJsonResponse(['message' => 'update your voice'], 201);
+            return $this->sendJsonResponse(['message' => 'Your vote has been updated.'], 201);
         }
 
         // not sure if you want to change relation name. 
@@ -46,6 +45,6 @@ class TestController extends Controller
             'value' => $request->post('value')
         ]);
 
-        return $this->sendJsonResponse(['message' => 'Voting completed successfully'], 200);
+        return $this->sendJsonResponse(['message' => 'Your vote has been submitted.'], 200);
     }
 }
