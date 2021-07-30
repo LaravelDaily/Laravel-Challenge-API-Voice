@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class NewsRequest extends FormRequest
+class StoreQuestionRequest extends FormRequest
 {
     /**
      * Add parameters to be validated
