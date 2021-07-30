@@ -1,48 +1,61 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
-
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
-
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
+    public function voice(Request $request){
+        $this->validate($request);
+    
+        $question=Question::findOrFail($request->post('question_id'));
+        // can use laravel Gate
+        if(!$this->isAllowedToVote($question)){
+            return $this->errorResponse("The user is not allowed to vote to your question", 403);
+        }
+    
+        //check if user voted 
+        $voice=Voice::where([
+            ['user_id','=',auth()->id()],
+            ['question_id','=',$request->post('question_id')]
+        ])->first();
+        if ($this->isAlreadyVoted($voice, $request)) {
+            return $this->errorResponse('The user is not allowed to vote more than once', 400);
+        }
+        if (!$this->isAlreadyVoted($voice, $request)){
+            $voice->update([
+                'value'=>$request->post('value')
+            ]);
+            return $this->successResponse('update your voice', 201);
+        }
+    
+        $question->voice()->create([
+            'user_id'=>auth()->id(),
             'value'=>$request->post('value')
         ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
+        return $this->createdResponse('Voting completed successfully');
+    }
+    private function validate(Request $request){
+        $request->validate([
+            'question_id'=>'required|int|exists:questions,id',
+            'value'=>'required|boolean',
         ]);
     }
-
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
-
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
-}
+    private function errorResponse($message, $code = 500){
+        return response()->json([
+            'status'=>$code,
+            'message'=>$message
+        ]);
+    }
+    private function successResponse($message){
+        return response()->json([
+            'status'=>200,
+            'message'=>$message
+        ]);
+    }
+    private function createdResponse($message){
+        return response()->json([
+            'status'=>201,
+            'message'=>$message
+        ]);
+    }
+    private function isAllowedToVote(Question $question){
+        return $question->user_id==auth()->id();
+    }
+    public function isAlreadyVoted(Voice $voice, Request $request)
+    {
+        return $voice && $voice->value === $request->get('value');
+    }
