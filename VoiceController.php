@@ -1,48 +1,41 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
+<?php
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
+namespace App\Http\Controllers\Api;
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
+use App\Http\Controllers\Controller;
+use App\Models\Voice;
+use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\VoiceRequest;
+
+class VoiceController extends Controller
+{
+    public function voice(VoiceRequest $request)
+    {
+        $authId = auth()->id();
+        $questionId = $request->post('question_id');
+        $value = $request->post('value');
+
+        $question = Question::findOrFail($questionId);
+
+        // if the user is not allowed to vote more then once,
+        //then the logic is that he can't either update or create another voting value
+        Voice::where([
+            ['user_id', $authId],
+            ['question_id', $questionId]
+        ])->firstOr(function () use ($authId, $question, $value) {
+            //the relational function should be named voices because one question can have many voices.
+            $question->voices()->attach($authId, ['value' => $value]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Voting completed successfully'
+            ], Response::HTTP_OK);
+        });
+
+        // if the voice was found and not created it means that the user has been already voted.
         return response()->json([
-            'status' => 500,
+            'status' => 'error',
             'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+        ], Response::HTTP_METHOD_NOT_ALLOWED);
     }
-
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
-
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
 }
