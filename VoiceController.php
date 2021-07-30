@@ -5,7 +5,7 @@ public function voice(StoreQuestionRequest $request){
     if (!$question->user_id==auth()->id()){
         if($question->voice()->user_id == auth()->id()){
              $question->voice()->value = $request->post('value');
-             if($voice->isDirty()){
+             if($question->voice()->isDirty()){
                 $voice->save();
      
              }
