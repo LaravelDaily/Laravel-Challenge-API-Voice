@@ -8,10 +8,7 @@
         $question = Question::findOrFail($request->post('question_id'));
         
         if ($question->user_id == auth()->id()){
-            return response()->json([
-                'status' => 500,
-                'message' => 'You are not allowed to vote to your question'
-            ]);
+            return response()->json($this->responseJsonDefined(500, 'You are not allowed to vote to your question'));
         }
             
         //check if user voted 
@@ -30,21 +27,16 @@
 
             $voice->value = $request->post('value');
             $voice->save();
-
-            return response()->json([
-                'status'=>201,
-                'message'=>'Update your voice'
-            ]);
-
+            return response()->json($this->responseJsonDefined(201, 'Update your voice'));
         }
 
         $question->voice()->create([
             'user_id' => auth()->id(),
             'value' => $request->post('value')
         ]);
+        return response()->json($this->responseJsonDefined(200, 'Voting completed successfully'));
+    }
 
-        return response()->json([
-            'status'=>200,
-            'message'=>'Voting completed successfully'
-        ]);
+    private function responseJsonDefined($status, $message){
+        return ['status' => $status, 'message' => $message];
     }
