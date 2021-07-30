@@ -26,25 +26,19 @@ class TestController extends Controller
         // check if user voted 
         $voice = $question->voices()->where('user_id', auth()->id())->first();
 
-        if (!$voice) {
+        if ($voice) {
             if ($voice->value === $request->post('value')) {
                 return $this->sendErrorResponse("You cant vote more than once", 500);
             }
 
-            $voice->update([
-                'value' => $request->post('value')
-            ]);
-
+            $voice->update($request->only('value'));
             return $this->sendJsonResponse(['message' => 'Your vote has been updated.'], 201);
         }
 
         // not sure if you want to change relation name. 
         // but i do want to change it to voices since it must be one to many relationship.
-        $question->voices()->create([
-            'user_id' => auth()->id(),
-            'value' => $request->post('value')
-        ]);
+        $question->voices()->create($request->only('user_id', 'value'));
 
-        return $this->sendJsonResponse(['message' => 'Your vote has been submitted.'], 200);
+        return $this->sendJsonResponse(['message' => 'Your vote has been submitted.']);
     }
 }

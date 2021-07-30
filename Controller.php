@@ -13,7 +13,7 @@ class Controller
      * @param integer $code
      * @return Response
      */
-    protected function sendJsonResponse(array $data, int $code): Response
+    protected function sendJsonResponse(array $data, int $code = 200): Response
     {
         return response()->json([
             "code" => $code,
