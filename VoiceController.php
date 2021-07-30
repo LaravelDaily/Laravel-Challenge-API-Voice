@@ -1,48 +1,50 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
+<?php
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
+class VoiceController extends Controller
+{
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param StoreVoiceRequest $request
+     * @param StoreVoiceAction  $action
+     *
+     * @return VoiceResource
+     * @throws Exception
+     */
+    public function store(StoreVoiceRequest $request, StoreVoiceAction $action): VoiceResource
+    {
+        $voice = $action->handle($request);
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+        return new VoiceResource($voice);
     }
 
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
+    /**
+     * Display the specified resource.
+     *
+     * @param ShowVoiceRequest $request
+     * @param Voice            $voice
+     *
+     * @return VoiceResource
+     */
+    public function show(ShowVoiceRequest $request, Voice $voice): VoiceResource
+    {
+        return new VoiceResource($voice);
+    }
 
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
+    /**
+     * Update an voice.
+     *
+     * @param UpdateVoiceRequest $request
+     * @param Voice              $voice
+     * @param UpdateVoiceAction  $action
+     *
+     * @return VoiceResource
+     * @throws Exception
+     */
+    public function update(UpdateVoiceRequest $request, Voice $voice, UpdateVoiceAction $action): VoiceResource
+    {
+        $voice = $action->handle($request, $voice);
+
+        return new VoiceResource($voice);
+    }
 }
