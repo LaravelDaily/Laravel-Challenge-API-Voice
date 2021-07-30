@@ -7,7 +7,7 @@ use VoiceRequest;
 
 use App\Models\Question;
 
-class TestController extends Controller 
+class VoiceController extends Controller 
 {
     public function voice(VoiceRequest $request) 
     {
