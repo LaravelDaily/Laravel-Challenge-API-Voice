@@ -1,7 +1,7 @@
 public function voice(Request $request){
 
     // can't vote on own question
-    $question = Question::where('user_id','!=',Auth::id())->findOrFail($request->question_id));
+    $question = Question::where('user_id','<>',Auth::id())->findOrFail($request->question_id));
 
     // assumes there is a relationship of a user's voices
     Auth::user()->voices()->createOrUpdate([
