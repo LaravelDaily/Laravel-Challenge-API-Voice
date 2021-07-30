@@ -7,6 +7,9 @@ public function voice(StoreQuestionRequest $request){
              $question->voice()->value = $request->post('value');
              if($voice->isDirty()){
                 $voice->save();
+                return response()->json([
+                'message'=>'Voting update successfully'
+                ]200);
              }
         }
         $question->voice()->create([
