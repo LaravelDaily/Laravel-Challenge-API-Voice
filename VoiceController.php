@@ -43,7 +43,7 @@ public function submitVote_NeedsKeepJsonResponse(Request $request) // If, for so
       ]);
       return response()->json([
         'status' => 201,
-        'message' => 'update your voice'
+        'message' => 'You have changed your vote!'
       ]);
     }
   }
