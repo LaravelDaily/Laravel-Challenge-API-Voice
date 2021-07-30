@@ -8,7 +8,10 @@ public function voice(Request $request){
 
     // We dont have to check if Question not exists. Because validation checks for us
     if ($question->user_id == auth()->id())
-        return response('The user is not allowed to vote to your question', 500);
+        return response()->json([
+            'status' => 500,
+            'message' => 'The user is not allowed to vote to your question'
+        ], 500);
 
     // check if user voted
     // We can use relation for query
@@ -18,12 +21,18 @@ public function voice(Request $request){
     if(isset(vote)){
         // if it's not equals to value there is one option left. It's not equal to value input. So we can use else.
         if ($vote->value === $request->value)
-            return response('The user is not allowed to vote more than once', 500);
+            return response()->json([
+                'status' => 500,
+                'message' => 'The user is not allowed to vote more than once'
+            ], 500);
         else{
             $vote->update([
                'value'=>$request->value
             ]);
-            return response('Your voice updated', 201);
+            return response()->json([
+                'status' => 201,
+                'message' => 'Your voice updated'
+            ], 201);
         }
     }
 
@@ -31,6 +40,8 @@ public function voice(Request $request){
         'user_id'=>auth()->id(),
         'value'=>$request->value
     ]);
-
-    return response('Voting completed successfully', 200);
+    return response()->json([
+        'status' => 200,
+        'message' => 'Voting completed successfully'
+    ], 200);
 }
