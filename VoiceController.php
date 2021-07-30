@@ -4,32 +4,30 @@ public function voice(Request $request){
         'value'=>'required|boolean',
     ]);
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
+    $question = Question::findOrFail($request->question_id);
+
+    if ($question->user_id == auth()->id())
         return response()->json([
             'status' => 500,
             'message' => 'The user is not allowed to vote to your question'
         ]);
 
     //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
+    $voice = Voice::where([
+        ['user_id', auth()->id()],
+        ['question_id', $request->question_id]
+    ])->firstOrFail();
+
+    if ($voice->value === $request->value) {
         return response()->json([
             'status' => 500,
             'message' => 'The user is not allowed to vote more than once'
         ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
+    }else if ($voice->value !== $request->value){
         $voice->update([
-            'value'=>$request->post('value')
+            'value' => $request->value
         ]);
+
         return response()->json([
             'status'=>201,
             'message'=>'update your voice'
@@ -38,7 +36,7 @@ public function voice(Request $request){
 
     $question->voice()->create([
         'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
+        'value'=>$request->value
     ]);
 
     return response()->json([
