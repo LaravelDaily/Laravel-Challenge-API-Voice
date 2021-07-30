@@ -1,48 +1,61 @@
-public function voice(Request $request){
+public function voice(Request $request)
+{
     $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
+        'question_id' => ['required', 'int', 'exists:questions,id'],
+        'value' => ['required', 'boolean'],
     ]);
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
+    $authUserId = auth()->id();
+    $questionId = $request->post('question_id');
+    $voteValue = $request->post('value');
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
+    $question = Question::find($questionId);
+
+    if (is_null($question)) {
         return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
+            'status' => 404,
+            'message' => 'Question not found',
         ]);
     }
 
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
+    if ($question->user_id === $authUserId) {
+        return response()->json([
+            'status' => 401,
+            'message' => 'The user is not allowed to vote to your question',
+        ]);
+    }
+
+    $voice = $question->voice()
+        ->where('user_id', $authUserId)
+        ->first();
+
+    if (is_null($voice)) {
+        $question->voice()->create([
+            'user_id' => $authUserId,
+            'value' => $voteValue,
+        ]);
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Voting completed successfully',
+        ]);
+    }
+
+    // Since I don't know the type of value property from the voice model,
+    // Let's use unstrict comparison here
+    if ($voice->value == $voteValue) {
+        return response()->json([
+            'status' => 500,
+            'message' => 'The user is not allowed to vote more than once',
+        ]);
+    }
+
+    $voice->update([
+        'value' => $voteValue,
     ]);
 
     return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
+        'status' => 201,
+        'message' => 'Update your voice',
     ]);
 }
