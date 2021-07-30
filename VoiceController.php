@@ -4,7 +4,7 @@ public function voice(Request $request){
         'value'=>'required|boolean',
     ]);
 
-    $question = Question::find($request->post('question_id'))->first();
+    $question = Question::find($request->post('question_id'));
     if (!$question)
     {
         return response()->json([
