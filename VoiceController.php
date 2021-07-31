@@ -9,22 +9,16 @@ class VoiceController extends Controller
             return response()->json(['message' => 'The user is not allowed to vote to your question'], 401);
         }
 
-        $voice = $question->voice->where('user_id', auth()->id())->first();
-        if ($voice) {
-            if ($voice->value === $request->value) {
-                return response()->json(['message' => 'The user is not allowed to vote more than once'], 401);
-            }
+        $voice = $question->voice()->updateOrCreate(['user_id' => auth()->id()], ['value' => $request->value]);
 
-            $voice->update([
-                'value' => $request->value
-            ]);
+        if ($voice->wasRecentlyCreated) {
+            return response()->json(['message' => 'Voting completed successfully'], 200);
+        }
+
+        if ($voice->wasChanged('value')) {
             return response()->json(['message' => 'update your voice'], 201);
         }
 
-        $question->voice()->create([
-            'user_id' => auth()->id(),
-            'value' => $request->value
-        ]);
-        return response()->json(['message' => 'Voting completed successfully'], 200);
+        return response()->json(['message' => 'The user is not allowed to vote more than once'], 401);
     }
 }
