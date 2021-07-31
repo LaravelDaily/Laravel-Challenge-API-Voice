@@ -1,48 +1,63 @@
+<?php
 public function voice(Request $request){
+
     $request->validate([
         'question_id'=>'required|int|exists:questions,id',
         'value'=>'required|boolean',
     ]);
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
-        ]);
+    try {
+        $question = Question::findOrFail($request->post('question_id'));
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+        $vote = $question->vote($request->post('value'));
+        $responseData = $vote->wasRecentlyCreated
+            ? ['status' => 200, 'message' => 'Voting completed successfully']
+            : ['status' => 201, 'message' => 'update your voice'];
+    } catch(ModelNotFoundException $e) {
+        // We should be able to remove this catch. Validation should assure we never get to this?
+        $responseData = ['status' => 401, 'message' => 'Question not found.'];
+    } catch (IsOwnQuestionException $e) {
+        $responseData = ['status' => 401, 'message' => 'The user is not allowed to vote to your question'];
+    } catch (UserAlreadyHasVotedException $e) {
+        $responseData = ['status' => 500, 'message' => 'The user is not allowed to vote more than once'];
     }
 
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
+    return response()->json($responseData);
+}
 
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
+class User extends Model {
+
+    public function hasAlreadyVotedForQuestion(Question $question, $value)
+    {
+            return $question
+                ->voice()
+                ->where('user_id', $this->id)
+                ->where('value', $value)
+                ->exists();
+    }
+
+    public function questionBelongsToUser(Question $question)
+    {
+        return $this->id === $question->user_id;
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+}
+
+class Question extends Model {
+
+    public function vote($value)
+    {
+        throw_if(auth()->questionBelongsToUser($this), IsOwnQuestionException::class);
+
+        throw_if(auth()->hasAlreadyVotedForQuestion($this, $value), UserAlreadyHasVotedException::class);
+
+        return Voice::updateOrCreate(
+            ['user_id' => auth()->id],
+            ['value' => $value]
+        );
+    }
 }
