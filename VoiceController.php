@@ -32,7 +32,7 @@ public function voice(Request $request)
             return response()->json([
                 'status' => false,
                 'message' => 'You are not allowed to vote for your question'
-            ], 200);
+            ], 401);
         }
         
         //check if user voted
