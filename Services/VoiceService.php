@@ -41,9 +41,12 @@ class VoiceService
             return $userVote;
         }
 
-        return $question->voice()->create([
-            'user_id' => $user->id,
-            'value' => $this->request->post('value')
-        ]);
+        return $question->voice()->updateOrCreate(
+            ['id' => $userVote ? $userVote->id : -1],
+            [
+                'user_id' => $user->id,
+                'value' => $this->request->post('value')
+            ]
+        );
     }
 }
