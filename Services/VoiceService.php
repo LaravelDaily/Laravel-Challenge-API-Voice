@@ -34,13 +34,6 @@ class VoiceService
             throw new AccessDeniedHttpException('The user is not allowed to vote more than once');
         }
 
-        if (null !== $userVote && $userVote->value !== $this->request->post('value')) {
-            $userVote->update([
-                'value' => $this->request->post('value')
-            ]);
-            return $userVote;
-        }
-
         return $question->voice()->updateOrCreate(
             ['id' => $userVote ? $userVote->id : -1],
             [
