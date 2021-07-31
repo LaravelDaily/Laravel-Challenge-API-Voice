@@ -4,7 +4,7 @@ class VoiceController extends Controller
 {
     public function voice(VoiceRequest $request)
     {
-        $question = Question::with('voice')->find($request->question_id);
+        $question = Question::find($request->question_id);
         if ($question->user_id == auth()->id()) {
             return response()->json(['message' => 'The user is not allowed to vote to your question'], 401);
         }
