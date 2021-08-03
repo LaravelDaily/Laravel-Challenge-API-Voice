@@ -1,48 +1,30 @@
-public function voice(Request $request){
-    $request->validate([
-        'question_id'=>'required|int|exists:questions,id',
-        'value'=>'required|boolean',
-    ]);
+<?php
 
-    $question=Question::find($request->post('question_id'));
-    if (!$question)
-        return response()->json([
-            'status'=>404,
-            'message'=>'not found question ..'
-        ]);
-    if ($question->user_id==auth()->id())
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote to your question'
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\VoiceRequest;
+use App\Models\Question;
+use Illuminate\Http\Response;
+
+class VoiceController extends Controller
+{
+    public function voice(VoiceRequest $request, Question $question)
+    {
+        $voice = $question->voices()->updateOrCreate([
+            'user_id' => auth()->id(),
+        ], [
+            'value' => $request->input('value'),
         ]);
 
-    //check if user voted 
-    $voice=Voice::where([
-        ['user_id','=',auth()->id()],
-        ['question_id','=',$request->post('question_id')]
-    ])->first();
-    if (!is_null($voice)&&$voice->value===$request->post('value')) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'The user is not allowed to vote more than once'
-        ]);
-    }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-        $voice->update([
-            'value'=>$request->post('value')
-        ]);
-        return response()->json([
-            'status'=>201,
-            'message'=>'update your voice'
-        ]);
+        if ($voice->wasRecentlyCreated) {
+            return response(['message' => 'Voting completed successfully'], Response::HTTP_CREATED);
+        }
+
+        if ($voice->wasChanged('value')) {
+            return response(['message' => 'Your vote updated'], Response::HTTP_ACCEPTED);
+        }
+
+        return response(['message' => 'You already voted'], Response::HTTP_FORBIDDEN);
     }
-
-    $question->voice()->create([
-        'user_id'=>auth()->id(),
-        'value'=>$request->post('value')
-    ]);
-
-    return response()->json([
-        'status'=>200,
-        'message'=>'Voting completed successfully'
-    ]);
 }
