@@ -8,6 +8,6 @@ class VoicePolicy
 
     public function vote(User $user, Question $question)
     {
-        return $question->user_id == $user->id;
+        return $question->user_id != $user->id;
     }
 }
