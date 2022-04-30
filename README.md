@@ -24,3 +24,12 @@ If you have any questions, or suggestions for the future challenges, please open
 
 Good luck!
 
+### Checklist
+
+[] Install/Config Laravel;
+
+[] Create migrations, route and models;
+
+[] Create tests to VoiceController;
+
+[] Refactor VoiceController class;
