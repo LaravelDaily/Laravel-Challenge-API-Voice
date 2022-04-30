@@ -30,6 +30,6 @@ Good luck!
 
 [x] Create migrations, factory, route and models;
 
-[ ] Create tests to VoiceController;
+[X] Create tests to VoiceController;
 
 [ ] Refactor VoiceController class;
