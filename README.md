@@ -26,7 +26,7 @@ Good luck!
 
 ### Checklist
 
-[] Install/Config Laravel;
+[x] Install/Config Laravel;
 
 [] Create migrations, route and models;
 
