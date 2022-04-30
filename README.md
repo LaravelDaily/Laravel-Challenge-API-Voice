@@ -28,8 +28,8 @@ Good luck!
 
 [x] Install/Config Laravel;
 
-[] Create migrations, route and models;
+[x] Create migrations, factory, route and models;
 
-[] Create tests to VoiceController;
+[ ] Create tests to VoiceController;
 
-[] Refactor VoiceController class;
+[ ] Refactor VoiceController class;

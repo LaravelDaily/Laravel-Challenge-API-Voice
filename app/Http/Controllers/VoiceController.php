@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Question;
+use App\Models\Voice;
 use Illuminate\Http\Request;
 
 class VoiceController extends Controller
