@@ -2,58 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotAllowedException;
+use App\Exceptions\NotFoundException;
+use App\Http\Requests\UpsertVoiceRequest;
 use App\Models\Question;
 use App\Models\Voice;
-use Illuminate\Http\Request;
 
 class VoiceController extends Controller
 {
-    public function voice(Request $request){
-        $request->validate([
-            'question_id'=>'required|int|exists:questions,id',
-            'value'=>'required|boolean',
-        ]);
+    // FIRST SCENARIO - without changing the method's inputs and outputs
+    public function voice(UpsertVoiceRequest $request)
+    {
+        $question = Question::find($request->post('question_id'));
+        throw_if(empty($question), new NotFoundException());
+        throw_if($question->user_id == auth()->id(), new NotAllowedException());
 
-        $question=Question::find($request->post('question_id'));
-        if (!$question)
-            return response()->json([
-                'status'=>404,
-                'message'=>'not found question ..'
-            ]);
-        if ($question->user_id==auth()->id())
-            return response()->json([
-                'status' => 500,
-                'message' => 'The user is not allowed to vote to your question'
-            ]);
-
-        //check if user voted
-        $voice=Voice::where([
-            ['user_id','=',auth()->id()],
-            ['question_id','=',$request->post('question_id')]
-        ])->first();
-        if (!is_null($voice)&&$voice->value===$request->post('value')) {
-            return response()->json([
-                'status' => 500,
-                'message' => 'The user is not allowed to vote more than once'
-            ]);
-        }else if (!is_null($voice)&&$voice->value!==$request->post('value')){
-            $voice->update([
-                'value'=>$request->post('value')
-            ]);
-            return response()->json([
-                'status'=>201,
-                'message'=>'update your voice'
-            ]);
-        }
-
-        $question->voice()->create([
-            'user_id'=>auth()->id(),
-            'value'=>$request->post('value')
-        ]);
+        $voice = Voice::updateOrCreate(
+            ['user_id' => auth()->id(), 'question_id' =>$request->post('question_id')],
+            ['value' => $request->post('value')]
+        );
 
         return response()->json([
-            'status'=>200,
-            'message'=>'Voting completed successfully'
+            'status' => $voice->wasRecentlyCreated ? 200 : 201,
+            'message' => $voice->wasRecentlyCreated ? 'Voting completed successfully' : 'update your voice'
         ]);
     }
 }

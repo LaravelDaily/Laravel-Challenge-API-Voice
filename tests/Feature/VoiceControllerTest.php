@@ -46,17 +46,22 @@ class VoiceControllerTest extends TestCase
 
     public function test_update_voice()
     {
-        $voice = Voice::factory()->create(['question_id' => $this->question->id, 'user_id' => $this->user->id]);
+        $voice = Voice::factory()->create(
+            [
+                'question_id' => $this->question->id,
+                'user_id' => $this->user->id
+            ]
+        );
         $response = $this->post(
             route('voice.upsert'),
-            ['question_id' => $this->question->id, 'value' => true]
+            ['question_id' => $this->question->id, 'value' => false]
         );
 
         $this->assertDatabaseHas(
             'voices',
             [
                 'id' => $voice->id,
-                'value' => true
+                'value' => false
             ]
         );
         $response->assertExactJson(

@@ -26,10 +26,8 @@ Good luck!
 
 ### Checklist
 
-[x] Install/Config Laravel;
-
-[x] Create migrations, factory, route and models;
-
-[X] Create tests to VoiceController;
-
-[ ] Refactor VoiceController class;
+- [x] Install/Config Laravel;
+- [x] Create migrations, factory, route and models;
+- [x] Create tests to VoiceController;
+- [x] Refactor VoiceController class, without changing the method's inputs and outputs;
+- [ ] PLUS: Refactor VoiceController class, changing the method's inputs and outputs;
