@@ -30,4 +30,4 @@ Good luck!
 - [x] Create migrations, factory, route and models;
 - [x] Create tests to VoiceController;
 - [x] Refactor VoiceController class, without changing the method's inputs and outputs;
-- [ ] PLUS: Refactor VoiceController class, changing the method's inputs and outputs;
+- [x] PLUS: Refactor VoiceController class, changing the method's inputs and outputs;

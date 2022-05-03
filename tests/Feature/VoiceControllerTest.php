@@ -46,12 +46,7 @@ class VoiceControllerTest extends TestCase
 
     public function test_update_voice()
     {
-        $voice = Voice::factory()->create(
-            [
-                'question_id' => $this->question->id,
-                'user_id' => $this->user->id
-            ]
-        );
+        $voice = $this->getVoice();
         $response = $this->post(
             route('voice.upsert'),
             ['question_id' => $this->question->id, 'value' => false]
@@ -113,6 +108,72 @@ class VoiceControllerTest extends TestCase
             [
                 'status' => 500,
                 'message'=>'The user is not allowed to vote to your question'
+            ]
+        );
+    }
+
+    public function test_create_voice2()
+    {
+        $response = $this->post(
+            route('voice2.upsert', ['question' => $this->question->id]),
+            ['value' => true]
+        );
+
+        $this->assertDatabaseHas(
+            'voices',
+            [
+                'user_id' => $this->user->id,
+                'question_id' => $this->question->id,
+                'value' => true
+            ]
+        );
+
+        $response->assertStatus(201);
+    }
+
+    public function test_update_voice2()
+    {
+        $voice = $this->getVoice();
+        $response = $this->post(
+            route('voice2.upsert', ['question' => $this->question->id]),
+            ['value' => false]
+        );
+
+        $this->assertDatabaseHas(
+            'voices',
+            [
+                'id' => $voice->id,
+                'value' => false
+            ]
+        );
+
+        $response->assertStatus(200);
+    }
+
+    public function test_voice2_not_allowed()
+    {
+        $response = $this->post(
+            route('voice.upsert'),
+            [
+                'question_id' => Question::factory()->create(['user_id' => $this->user->id])->id,
+                'value' => false
+            ]
+        );
+
+        $response->assertExactJson(
+            [
+                'status' => 500,
+                'message'=>'The user is not allowed to vote to your question'
+            ]
+        );
+    }
+
+    private function getVoice()
+    {
+        return Voice::factory()->create(
+            [
+                'question_id' => $this->question->id,
+                'user_id' => $this->user->id
             ]
         );
     }

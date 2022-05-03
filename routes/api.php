@@ -21,4 +21,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/voice', [VoiceController::class, 'voice'])->name('voice.upsert');
+    Route::post('/voice2/{question}', [VoiceController::class, 'voice2'])->name('voice2.upsert');
 });
